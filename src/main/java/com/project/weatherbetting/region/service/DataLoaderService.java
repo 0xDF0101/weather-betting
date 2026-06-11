@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +22,7 @@ public class DataLoaderService {
     private final String REGION_DATA_FILE_PATH = "data/region_coordinate.csv";
     private final JdbcTemplate jdbcTemplate;
 
+    @Transactional
     public void loadIfEmpty() {
 
         // 데이터가 이미 들어간 경우 파싱 안함
