@@ -39,3 +39,8 @@ build/
 src/main/resources/application-dev.yml
 src/main/resources/application-local.yml
 
+### 그 외 잡다한 것 ###
+.omc/
+src/http/
+.DS_Store
+src/main/resources/.DS_Store
