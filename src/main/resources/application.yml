@@ -3,3 +3,5 @@ spring:
   application:
     name: weather-betting
 
+  datasource:
+    url:

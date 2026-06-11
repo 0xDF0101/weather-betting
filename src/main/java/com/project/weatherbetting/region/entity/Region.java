@@ -1,5 +1,6 @@
 package com.project.weatherbetting.region.entity;
 
+import com.project.weatherbetting.region.dto.RegionParsingResult;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 
@@ -38,5 +39,16 @@ public class Region {
     // 경도
     @Column(nullable = false)
     private BigDecimal longitude;
+
+    public Region(RegionParsingResult result) {
+        this.regionCode = result.regionCode();
+        this.city = result.city();
+        this.district = result.district();
+        this.dong = result.dong();
+        this.nx = result.nx();
+        this.ny = result.ny();
+        this.latitude = result.latitude();
+        this.longitude = result.longitude();
+    }
 
 }
