@@ -7,7 +7,7 @@ import java.util.List;
 @Getter
 public class ForecastApiResponse {
 
-    public Response response;
+    private Response response;
 
     public record Response(Header header, Body body) {}
 

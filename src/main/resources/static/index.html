@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherBet</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2235;
+            --border: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 배경 */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 빗방울 */
+        .rain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .drop {
+            position: absolute;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(147, 197, 253, 0.1));
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0%   { transform: translateY(-100px); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        /* 레이아웃 */
+        .layout { position: relative; z-index: 1; }
+
+        /* 상단 네비 */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-logo-text span { color: var(--accent); }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-points {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--warning);
+        }
+
+        .nav-username {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .btn-logout {
+            padding: 7px 14px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-logout:hover { background: var(--surface2); color: var(--text-primary); }
+
+        /* 메인 콘텐츠 */
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* 섹션 타이틀 */
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .badge {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* 지역 선택 바 */
+        .region-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .region-chip {
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .region-chip.active, .region-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        /* 베팅 카드 그리드 */
+        .bet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .bet-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: border-color 0.2s, transform 0.15s;
+        }
+
+        .bet-card:hover {
+            border-color: #374151;
+            transform: translateY(-2px);
+        }
+
+        .bet-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .bet-type {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bet-status {
+            font-size: 11px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .bet-status.open { background: rgba(34, 197, 94, 0.12); color: var(--success); }
+        .bet-status.closed { background: rgba(156, 163, 175, 0.12); color: var(--text-secondary); }
+
+        .bet-question {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .bet-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        /* 배당률 바 */
+        .odds-bar {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 6px;
+            margin-bottom: 12px;
+            gap: 2px;
+        }
+
+        .odds-bar-over { background: var(--accent); border-radius: 4px; }
+        .odds-bar-under { background: #6366f1; border-radius: 4px; }
+
+        .odds-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .odds-item { text-align: center; flex: 1; }
+
+        .odds-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .odds-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .odds-value.over { color: var(--accent); }
+        .odds-value.under { color: #818cf8; }
+
+        .bet-btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-bet {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-bet:hover { opacity: 0.85; }
+
+        .btn-bet.over { background: var(--accent); color: #fff; }
+        .btn-bet.under { background: #6366f1; color: #fff; }
+
+        /* 내 베팅 섹션 */
+        .my-bets {
+            margin-bottom: 40px;
+        }
+
+        .my-bet-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .my-bet-left { display: flex; flex-direction: column; gap: 3px; }
+        .my-bet-title { font-weight: 500; }
+        .my-bet-sub { font-size: 12px; color: var(--text-secondary); }
+
+        .my-bet-right { display: flex; align-items: center; gap: 12px; }
+        .my-bet-amount { font-weight: 600; color: var(--warning); }
+        .my-bet-odds { font-size: 13px; color: var(--text-secondary); }
+
+        /* 빈 상태 */
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            background: var(--surface);
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+        }
+
+        .empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            white-space: nowrap;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        @media (max-width: 600px) {
+            nav { padding: 12px 16px; }
+            main { padding: 20px 16px; }
+            .bet-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="rain" id="rain"></div>
+
+<div class="layout">
+    <nav>
+        <a class="nav-logo" href="/">
+            <div class="nav-logo-icon">🌦</div>
+            <div class="nav-logo-text">Weather<span>Bet</span></div>
+        </a>
+        <div class="nav-right">
+            <div class="nav-points">⚡ <span id="userPoints">1,000</span> P</div>
+            <span class="nav-username" id="userName">사용자</span>
+            <button class="btn-logout" id="logoutBtn">로그아웃</button>
+        </div>
+    </nav>
+
+    <main>
+        <!-- 지역 선택 -->
+        <div class="region-bar">
+            <div class="region-chip active">서울</div>
+            <div class="region-chip">부산</div>
+            <div class="region-chip">인천</div>
+            <div class="region-chip">대구</div>
+            <div class="region-chip">광주</div>
+            <div class="region-chip">대전</div>
+        </div>
+
+        <!-- 진행 중인 베팅 -->
+        <div class="section-title">
+            진행 중인 베팅 <span class="badge">OPEN</span>
+        </div>
+
+        <div class="bet-grid">
+            <!-- 강수 베팅 카드 -->
+            <div class="bet-card">
+                <div class="bet-card-header">
+                    <span class="bet-type">🌧 강수</span>
+                    <span class="bet-status open">진행 중</span>
+                </div>
+                <div class="bet-question">오늘 오후 서울에 비가 올까요?</div>
+                <div class="bet-meta">기상청 예보: 강수확률 30% · 마감 18:00</div>
+                <div class="odds-bar">
+                    <div class="odds-bar-over" style="width: 30%"></div>
+                    <div class="odds-bar-under" style="width: 70%"></div>
+                </div>
+                <div class="odds-row">
+                    <div class="odds-item">
+                        <div class="odds-label">비 온다 (Over)</div>
+                        <div class="odds-value over">3.20x</div>
+                    </div>
+                    <div class="odds-item">
+                        <div class="odds-label">안 온다 (Under)</div>
+                        <div class="odds-value under">1.40x</div>
+                    </div>
+                </div>
+                <div class="bet-btn-row">
+                    <button class="btn-bet over" onclick="showToast('베팅 기능 구현 예정입니다.', 'error')">비 온다</button>
+                    <button class="btn-bet under" onclick="showToast('베팅 기능 구현 예정입니다.', 'error')">안 온다</button>
+                </div>
+            </div>
+
+            <!-- 기온 베팅 카드 -->
+            <div class="bet-card">
+                <div class="bet-card-header">
+                    <span class="bet-type">🌡 기온</span>
+                    <span class="bet-status open">진행 중</span>
+                </div>
+                <div class="bet-question">오늘 서울 최고기온이 30°C를 넘을까요?</div>
+                <div class="bet-meta">기상청 예보: 최고 29°C · 마감 06:00</div>
+                <div class="odds-bar">
+                    <div class="odds-bar-over" style="width: 45%"></div>
+                    <div class="odds-bar-under" style="width: 55%"></div>
+                </div>
+                <div class="odds-row">
+                    <div class="odds-item">
+                        <div class="odds-label">30°C 이상 (Over)</div>
+                        <div class="odds-value over">2.10x</div>
+                    </div>
+                    <div class="odds-item">
+                        <div class="odds-label">30°C 미만 (Under)</div>
+                        <div class="odds-value under">1.80x</div>
+                    </div>
+                </div>
+                <div class="bet-btn-row">
+                    <button class="btn-bet over" onclick="showToast('베팅 기능 구현 예정입니다.', 'error')">이상</button>
+                    <button class="btn-bet under" onclick="showToast('베팅 기능 구현 예정입니다.', 'error')">미만</button>
+                </div>
+            </div>
+
+            <!-- 닫힌 베팅 카드 (예시) -->
+            <div class="bet-card">
+                <div class="bet-card-header">
+                    <span class="bet-type">🌧 강수</span>
+                    <span class="bet-status closed">마감</span>
+                </div>
+                <div class="bet-question">어제 오후 서울에 비가 왔나요?</div>
+                <div class="bet-meta">정산 완료 · 실제 강수: 없음</div>
+                <div class="odds-bar">
+                    <div class="odds-bar-over" style="width: 20%"></div>
+                    <div class="odds-bar-under" style="width: 80%"></div>
+                </div>
+                <div class="odds-row">
+                    <div class="odds-item">
+                        <div class="odds-label">비 온다 (Over)</div>
+                        <div class="odds-value over" style="opacity:0.4">4.80x</div>
+                    </div>
+                    <div class="odds-item">
+                        <div class="odds-label">안 온다 (Under)</div>
+                        <div class="odds-value under" style="opacity:0.4">1.20x</div>
+                    </div>
+                </div>
+                <div class="bet-btn-row">
+                    <button class="btn-bet over" disabled style="opacity:0.3; cursor:not-allowed">비 온다</button>
+                    <button class="btn-bet under" disabled style="opacity:0.3; cursor:not-allowed">안 온다</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 내 베팅 내역 -->
+        <div class="my-bets">
+            <div class="section-title">내 베팅 내역</div>
+            <div class="empty">
+                <div class="empty-icon">🎯</div>
+                아직 베팅 내역이 없어요.<br>첫 베팅에 도전해보세요!
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // 빗방울
+    const rain = document.getElementById('rain');
+    for (let i = 0; i < 30; i++) {
+        const drop = document.createElement('div');
+        drop.className = 'drop';
+        drop.style.left = Math.random() * 100 + '%';
+        drop.style.height = (Math.random() * 60 + 40) + 'px';
+        drop.style.animationDuration = (Math.random() * 1.5 + 0.8) + 's';
+        drop.style.animationDelay = (Math.random() * 2) + 's';
+        rain.appendChild(drop);
+    }
+
+    function showToast(msg, type = 'error') {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = `toast ${type} show`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // 로그아웃
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await fetch('/api/v1/auth/logout', { method: 'POST' });
+        window.location.href = '/login.html';
+    });
+
+    // 지역 칩 토글
+    document.querySelectorAll('.region-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.region-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+        });
+    });
+</script>
+</body>
+</html>

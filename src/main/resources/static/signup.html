@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherBet — 회원가입</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --border: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --error: #ef4444;
+            --success: #22c55e;
+            --google-bg: #1f2937;
+            --google-hover: #374151;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .rain {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .drop {
+            position: absolute;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(147, 197, 253, 0.15));
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0%   { transform: translateY(-100px); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 36px;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.03),
+                0 32px 64px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span { color: var(--accent); }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        input::placeholder { color: #4b5563; }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        input.error { border-color: var(--error); }
+        input.valid { border-color: var(--success); }
+
+        .error-msg {
+            font-size: 12px;
+            color: var(--error);
+            display: none;
+        }
+
+        .error-msg.visible { display: block; }
+
+        .btn-signup {
+            width: 100%;
+            padding: 13px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+            margin-top: 4px;
+            letter-spacing: -0.2px;
+        }
+
+        .btn-signup:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-signup:active { transform: scale(0.99); }
+        .btn-signup:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2px 0;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            font-size: 12px;
+            color: #4b5563;
+            white-space: nowrap;
+        }
+
+        .btn-google {
+            width: 100%;
+            padding: 13px;
+            background: var(--google-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-google:hover { background: var(--google-hover); }
+        .btn-google svg { flex-shrink: 0; }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .login-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover { text-decoration: underline; }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.3s ease;
+            z-index: 100;
+            white-space: nowrap;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.error { border-color: var(--error); }
+        .toast.success { border-color: var(--success); }
+    </style>
+</head>
+<body>
+
+    <div class="rain" id="rain"></div>
+
+    <div class="card">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🌦</div>
+                <div class="logo-text">Weather<span>Bet</span></div>
+            </div>
+            <p class="subtitle">기상청 예보에 도전해보세요<br>가입하고 첫 베팅 포인트를 받으세요</p>
+        </div>
+
+        <form class="form" id="signupForm" novalidate>
+            <div class="field">
+                <label for="email">이메일</label>
+                <input type="email" id="email" placeholder="example@email.com" autocomplete="email" />
+                <span class="error-msg" id="emailError">유효한 이메일을 입력해주세요.</span>
+            </div>
+
+            <div class="field">
+                <label for="username">닉네임</label>
+                <input type="text" id="username" placeholder="날씨마스터" maxlength="20" />
+                <span class="error-msg" id="usernameError">닉네임을 입력해주세요. (최대 20자)</span>
+            </div>
+
+            <div class="field">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" placeholder="8자 이상 입력해주세요" autocomplete="new-password" />
+                <span class="error-msg" id="passwordError">비밀번호는 8자 이상이어야 합니다.</span>
+            </div>
+
+            <div class="field">
+                <label for="passwordConfirm">비밀번호 확인</label>
+                <input type="password" id="passwordConfirm" placeholder="비밀번호를 한번 더 입력해주세요" autocomplete="new-password" />
+                <span class="error-msg" id="passwordConfirmError">비밀번호가 일치하지 않습니다.</span>
+            </div>
+
+            <button type="submit" class="btn-signup" id="signupBtn">가입하기</button>
+
+            <div class="divider"><span>또는</span></div>
+
+            <button type="button" class="btn-google" id="googleBtn">
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                    <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+                </svg>
+                구글로 시작하기
+            </button>
+        </form>
+
+        <div class="login-link">
+            이미 계정이 있으신가요? <a href="/login.html">로그인</a>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 빗방울
+        const rain = document.getElementById('rain');
+        for (let i = 0; i < 40; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'drop';
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.height = (Math.random() * 60 + 40) + 'px';
+            drop.style.animationDuration = (Math.random() * 1.5 + 0.8) + 's';
+            drop.style.animationDelay = (Math.random() * 2) + 's';
+            rain.appendChild(drop);
+        }
+
+        function showToast(msg, type = 'error') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function validate() {
+            const email = document.getElementById('email');
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+            const passwordConfirm = document.getElementById('passwordConfirm');
+
+            let valid = true;
+
+            [email, username, password, passwordConfirm].forEach(el => {
+                el.classList.remove('error', 'valid');
+                document.getElementById(el.id + 'Error').classList.remove('visible');
+            });
+
+            if (!email.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+                email.classList.add('error');
+                document.getElementById('emailError').classList.add('visible');
+                valid = false;
+            }
+
+            if (!username.value.trim()) {
+                username.classList.add('error');
+                document.getElementById('usernameError').classList.add('visible');
+                valid = false;
+            }
+
+            if (!password.value || password.value.length < 8) {
+                password.classList.add('error');
+                document.getElementById('passwordError').classList.add('visible');
+                valid = false;
+            }
+
+            if (password.value !== passwordConfirm.value) {
+                passwordConfirm.classList.add('error');
+                document.getElementById('passwordConfirmError').classList.add('visible');
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validate()) return;
+
+            const btn = document.getElementById('signupBtn');
+            btn.disabled = true;
+            btn.textContent = '가입 중...';
+
+            try {
+                const res = await fetch('/api/v1/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value,
+                    }),
+                });
+
+                if (res.ok) {
+                    showToast('가입 완료! 로그인 페이지로 이동합니다.', 'success');
+                    setTimeout(() => window.location.href = '/login.html', 1200);
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    showToast(data.message || '회원가입에 실패했습니다.');
+                }
+            } catch (err) {
+                showToast('서버에 연결할 수 없습니다.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '가입하기';
+            }
+        });
+
+        document.getElementById('googleBtn').addEventListener('click', () => {
+            showToast('구글 로그인은 준비 중입니다.', 'error');
+        });
+    </script>
+</body>
+</html>
