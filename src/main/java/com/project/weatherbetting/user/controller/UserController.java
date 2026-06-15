@@ -2,6 +2,7 @@ package com.project.weatherbetting.user.controller;
 
 import com.project.weatherbetting.user.dto.UserCreateRequest;
 import com.project.weatherbetting.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class UserController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<Void> createUser(@RequestBody UserCreateRequest req) {
+    public ResponseEntity<Void> createUser(@Valid @RequestBody UserCreateRequest req) {
 
         userService.create(req);
 
@@ -27,7 +28,5 @@ public class UserController {
 
         return ResponseEntity.status(201).build();
     }
-
-
 }
 

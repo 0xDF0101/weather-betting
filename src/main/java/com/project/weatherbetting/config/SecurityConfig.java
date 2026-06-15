@@ -1,5 +1,6 @@
 package com.project.weatherbetting.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +32,19 @@ public class SecurityConfig {
                                 "/h2-console/**"
                                 ).permitAll() // 일단 다 열어두기
                         .anyRequest().authenticated()
+                )
+                // 403 접근 시 예외 처리
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendRedirect("/login.html");
+                        })
+                )
+                // 로그아웃
+                .logout(logout -> logout
+                        .logoutUrl("/api/v1/auth/logout")
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        })
                 );
 
         return http.build();
