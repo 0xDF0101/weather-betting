@@ -2,6 +2,7 @@ package com.project.weatherbetting.region.entity;
 
 import com.project.weatherbetting.region.dto.RegionParsingResult;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "regions")
 @NoArgsConstructor
+@Getter
 public class Region {
 
     @Id

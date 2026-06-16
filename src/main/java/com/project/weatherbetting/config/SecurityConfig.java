@@ -29,7 +29,8 @@ public class SecurityConfig {
                                 "/signup.html",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/signup",
-                                "/h2-console/**"
+                                "/h2-console/**",
+                                "/api/v1/**" // API 테스트용으로만 열어두기
                                 ).permitAll() // 일단 다 열어두기
                         .anyRequest().authenticated()
                 )

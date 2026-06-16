@@ -3,19 +3,18 @@ package com.project.weatherbetting.weather.controller;
 import com.project.weatherbetting.weather.api.ForecastClient;
 import com.project.weatherbetting.weather.dto.ForecastApiResponse;
 import com.project.weatherbetting.weather.dto.ForecastRequest;
+import com.project.weatherbetting.weather.service.ForecastService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @Slf4j
 @RestController
 public class ApiTestController {
     private final ForecastClient client;
+    private final ForecastService forecastService;
 
     @PostMapping("/api/v1/forecast")
     public ResponseEntity<ForecastApiResponse> getForecast(@RequestBody ForecastRequest req) {
@@ -34,4 +33,12 @@ public class ApiTestController {
 
         return ResponseEntity.ok().body(res);
     }
+
+    @GetMapping("/api/v1/forecast/{regionCode}")
+    public ResponseEntity<ForecastApiResponse> getForecastByRegionCode(@PathVariable String regionCode) {
+        ForecastApiResponse res = forecastService.getForecast(regionCode);
+        return ResponseEntity.ok().body(res);
+    }
+
+
 }
