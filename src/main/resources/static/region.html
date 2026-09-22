@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherBet</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2235;
+            --border: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .rain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .drop {
+            position: absolute;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(147, 197, 253, 0.1));
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0%   { transform: translateY(-100px); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .layout { position: relative; z-index: 1; }
+
+        /* 네비 */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 16px; }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-logo-text span { color: var(--accent); }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-back:hover { background: var(--surface2); color: var(--text-primary); }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-points {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--warning);
+        }
+
+        .nav-username { font-size: 14px; color: var(--text-secondary); }
+
+        .btn-logout {
+            padding: 7px 14px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-logout:hover { background: var(--surface2); color: var(--text-primary); }
+
+        /* 메인 */
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* 지역 헤더 */
+        .region-header {
+            margin-bottom: 28px;
+        }
+
+        .region-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .region-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* 섹션 타이틀 */
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .badge {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* 날씨 섹션 */
+        .weather-section { margin-bottom: 40px; }
+
+        .date-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .date-tab {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .date-tab:hover { background: var(--surface2); color: var(--text-primary); }
+        .date-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        .weather-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .weather-scroll::-webkit-scrollbar { height: 4px; }
+        .weather-scroll::-webkit-scrollbar-track { background: transparent; }
+        .weather-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .weather-card {
+            flex-shrink: 0;
+            width: 110px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .weather-card:hover { border-color: #374151; }
+
+        .weather-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .weather-icon { font-size: 28px; margin-bottom: 8px; }
+
+        .weather-tmp {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .weather-pop {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .weather-reh {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* 베팅 카드 그리드 */
+        .bet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        /* 빈 상태 */
+        .empty {
+            text-align: center;
+            padding: 60px 40px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            background: var(--surface);
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+        }
+
+        .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+        /* 로딩 */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            white-space: nowrap;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        @media (max-width: 600px) {
+            nav { padding: 12px 16px; }
+            main { padding: 20px 16px; }
+            .bet-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="rain" id="rain"></div>
+
+<div class="layout">
+    <nav>
+        <div class="nav-left">
+            <a class="nav-logo" href="/">
+                <div class="nav-logo-icon">🌦</div>
+                <div class="nav-logo-text">Weather<span>Bet</span></div>
+            </a>
+            <a class="btn-back" href="/">← 목록으로</a>
+        </div>
+        <div class="nav-right">
+            <div class="nav-points">⚡ <span id="userPoints">1,000</span> P</div>
+            <span class="nav-username" id="userName">사용자</span>
+            <button class="btn-logout" id="logoutBtn">로그아웃</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="region-header">
+            <div class="region-title" id="regionTitle">지역 로딩 중...</div>
+            <div class="region-subtitle" id="regionSubtitle"></div>
+        </div>
+
+        <div class="weather-section">
+            <div class="section-title">날씨 예보</div>
+            <div class="date-tabs" id="dateTabs"></div>
+            <div class="weather-scroll" id="weatherCards">
+                <div class="loading">날씨 정보를 불러오는 중...</div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            진행 중인 베팅 <span class="badge">OPEN</span>
+        </div>
+
+        <div id="betList" class="bet-grid">
+            <div class="empty" style="grid-column: 1/-1">
+                <div class="empty-icon">🌤</div>
+                현재 진행 중인 베팅이 없습니다.
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // 빗방울
+    const rain = document.getElementById('rain');
+    for (let i = 0; i < 30; i++) {
+        const drop = document.createElement('div');
+        drop.className = 'drop';
+        drop.style.left = Math.random() * 100 + '%';
+        drop.style.height = (Math.random() * 60 + 40) + 'px';
+        drop.style.animationDuration = (Math.random() * 1.5 + 0.8) + 's';
+        drop.style.animationDelay = (Math.random() * 2) + 's';
+        rain.appendChild(drop);
+    }
+
+    function showToast(msg, type = 'error') {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = `toast ${type} show`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // 경로에서 지역 코드 추출 (/region/{code})
+    const regionCode = window.location.pathname.split('/').pop();
+    if (!regionCode) { window.location.href = '/'; }
+
+    document.getElementById('regionTitle').textContent = regionCode;
+    document.getElementById('regionSubtitle').textContent = `지역 코드: ${regionCode}`;
+
+    // 날씨 아이콘 (SKY, PTY 조합)
+    function weatherIcon(sky, pty) {
+        if (pty === '1') return '🌧️';
+        if (pty === '2') return '🌨️';
+        if (pty === '3') return '❄️';
+        if (pty === '4') return '🌦️';
+        if (sky === '1') return '☀️';
+        if (sky === '3') return '⛅';
+        if (sky === '4') return '☁️';
+        return '🌤️';
+    }
+
+    // item[] → { fcstDate → { fcstTime → { category: value } } }
+    function groupItems(items) {
+        const grouped = {};
+        for (const item of items) {
+            grouped[item.fcstDate] ??= {};
+            grouped[item.fcstDate][item.fcstTime] ??= {};
+            grouped[item.fcstDate][item.fcstTime][item.category] = item.fcstValue;
+        }
+        return grouped;
+    }
+
+    let forecastByDate = {};
+    let dateKeys = [];
+    let activeDate = null;
+
+    function renderTabs() {
+        const tabs = document.getElementById('dateTabs');
+        tabs.innerHTML = dateKeys.map((d, i) => {
+            const label = i === 0 ? '오늘' : i === 1 ? '내일' : '모레';
+            const formatted = `${d.slice(4,6)}/${d.slice(6,8)}`;
+            return `<button class="date-tab ${d === activeDate ? 'active' : ''}" data-date="${d}">${label} (${formatted})</button>`;
+        }).join('');
+
+        tabs.querySelectorAll('.date-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activeDate = btn.dataset.date;
+                renderTabs();
+                renderCards();
+            });
+        });
+    }
+
+    function renderCards() {
+        const container = document.getElementById('weatherCards');
+        const times = forecastByDate[activeDate] ?? {};
+
+        // 3시간 간격 시각만 표시
+        const TARGET_TIMES = ['0000','0300','0600','0900','1200','1500','1800','2100'];
+        const slots = TARGET_TIMES.filter(t => times[t]);
+
+        if (slots.length === 0) {
+            container.innerHTML = '<div class="loading">데이터가 없습니다.</div>';
+            return;
+        }
+
+        container.innerHTML = slots.map(t => {
+            const d = times[t];
+            const hour = t.slice(0, 2);
+            const icon = weatherIcon(d['SKY'], d['PTY']);
+            const tmp  = d['TMP']  != null ? `${d['TMP']}°` : '-';
+            const pop  = d['POP']  != null ? `💧 ${d['POP']}%` : '';
+            const reh  = d['REH']  != null ? `습도 ${d['REH']}%` : '';
+            return `
+                <div class="weather-card">
+                    <div class="weather-time">${hour}:00</div>
+                    <div class="weather-icon">${icon}</div>
+                    <div class="weather-tmp">${tmp}</div>
+                    <div class="weather-pop">${pop}</div>
+                    <div class="weather-reh">${reh}</div>
+                </div>`;
+        }).join('');
+    }
+
+    async function loadForecast() {
+        try {
+            const res = await fetch(`/api/v1/forecast/${regionCode}`);
+            if (!res.ok) throw new Error(res.status);
+            const data = await res.json();
+
+            const items = data?.response?.body?.items?.item ?? [];
+            forecastByDate = groupItems(items);
+            dateKeys = Object.keys(forecastByDate).sort();
+            activeDate = dateKeys[0];
+
+            renderTabs();
+            renderCards();
+        } catch (e) {
+            document.getElementById('weatherCards').innerHTML =
+                '<div class="loading">날씨 정보를 불러오지 못했습니다.</div>';
+        }
+    }
+
+    loadForecast();
+
+    // 로그아웃
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await fetch('/api/v1/auth/logout', { method: 'POST' });
+        window.location.href = '/login.html';
+    });
+</script>
+</body>
+</html>

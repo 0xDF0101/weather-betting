@@ -173,6 +173,80 @@
             color: #fff;
         }
 
+        /* 지역 검색 */
+        .region-search-wrap {
+            position: relative;
+            margin-bottom: 16px;
+            max-width: 400px;
+        }
+
+        .region-search-input {
+            width: 100%;
+            padding: 11px 16px 11px 40px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .region-search-input::placeholder { color: #4b5563; }
+
+        .region-search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .region-search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4b5563;
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        .region-search-result {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 50;
+            display: none;
+        }
+
+        .region-search-result.visible { display: block; }
+
+        .region-result-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .region-result-item:last-child { border-bottom: none; }
+        .region-result-item:hover { background: var(--surface2); }
+
+        .region-result-item .region-name { font-weight: 500; }
+        .region-result-item .region-code { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+        .region-result-empty {
+            padding: 16px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
         /* 지역 선택 바 */
         .region-bar {
             display: flex;
@@ -401,6 +475,13 @@
     </nav>
 
     <main>
+        <!-- 지역 검색 -->
+        <div class="region-search-wrap">
+            <span class="region-search-icon">🔍</span>
+            <input type="text" class="region-search-input" id="regionSearch" placeholder="동 이름으로 검색 (예: 역삼동)" autocomplete="off" />
+            <div class="region-search-result" id="regionSearchResult"></div>
+        </div>
+
         <!-- 지역 선택 -->
         <div class="region-bar">
             <div class="region-chip active">서울</div>
@@ -539,6 +620,57 @@
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         await fetch('/api/v1/auth/logout', { method: 'POST' });
         window.location.href = '/login.html';
+    });
+
+    // 지역 검색
+    const regionSearch = document.getElementById('regionSearch');
+    const regionSearchResult = document.getElementById('regionSearchResult');
+
+    let searchTimer;
+    regionSearch.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        const keyword = regionSearch.value.trim();
+
+        if (!keyword) {
+            regionSearchResult.classList.remove('visible');
+            return;
+        }
+
+        searchTimer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/v1/regions/search?dong=${encodeURIComponent(keyword)}`);
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    regionSearchResult.innerHTML = `<div class="region-result-empty">검색 결과가 없습니다.</div>`;
+                } else {
+                    regionSearchResult.innerHTML = data.map(r => `
+                        <div class="region-result-item" data-code="${r.regionCode}">
+                            <div class="region-name">${r.city} ${r.district} ${r.dong ?? ''}</div>
+                            <div class="region-code">${r.regionCode}</div>
+                        </div>
+                    `).join('');
+
+                    regionSearchResult.querySelectorAll('.region-result-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const code = item.dataset.code;
+                            window.location.href = `/region/${encodeURIComponent(code)}`;
+                        });
+                    });
+                }
+
+                regionSearchResult.classList.add('visible');
+            } catch (e) {
+                regionSearchResult.innerHTML = `<div class="region-result-empty">검색 중 오류가 발생했습니다.</div>`;
+                regionSearchResult.classList.add('visible');
+            }
+        }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.region-search-wrap')) {
+            regionSearchResult.classList.remove('visible');
+        }
     });
 
     // 지역 칩 토글

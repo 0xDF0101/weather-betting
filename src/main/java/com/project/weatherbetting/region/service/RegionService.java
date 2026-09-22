@@ -2,11 +2,13 @@ package com.project.weatherbetting.region.service;
 
 import com.project.weatherbetting.common.exception.RegionNotFoundException;
 import com.project.weatherbetting.region.dto.Coordinate;
+import com.project.weatherbetting.region.dto.RegionSearchResponse;
 import com.project.weatherbetting.region.entity.Region;
 import com.project.weatherbetting.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,8 +25,22 @@ public class RegionService {
     }
 
     // TODO 이름으로 지역 검색하는 용도
-    public List<Region> findByDong(String dong) {
+    @Transactional(readOnly = true)
+    public List<RegionSearchResponse> findByDong(String dong) {
 
-        return null;
+        if(!regionRepository.existsByDong(dong)) {
+            log.info("해당 지명은 존재하지 않습니다 : {}", dong);
+            throw new RegionNotFoundException("Not Found Region : ," + dong);
+        }
+
+        List<Region> regionList = regionRepository.findByDong(dong);
+
+        return regionList.stream()
+                .map(region -> new RegionSearchResponse(
+                        region.getRegionCode(),
+                        region.getCity(),
+                        region.getDistrict(),
+                        region.getDong()))
+                .toList();
     }
 }
